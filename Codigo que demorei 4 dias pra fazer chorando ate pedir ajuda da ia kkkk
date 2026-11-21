@@ -1,0 +1,175 @@
+#include <stdio.h>
+#include <string.h>
+
+#define MAX 100
+
+typedef struct {
+    char nome[100];
+    int idade;
+    char genero;
+    char gestante;
+    char necessidadeEspecial;
+    char senha[10];
+    char tipo;
+    int atendido;
+} Paciente;
+
+Paciente pacientes[MAX];
+
+int total = 0;
+int contadorNormal = 0;
+int contadorPreferencial = 0;
+int contadorUrgente = 0;
+
+// Encontra o proximo paciente pela prioridade
+int proximoPaciente() {
+    char prioridades[] = {'U', 'P', 'N'};
+
+    for (int p = 0; p < 3; p++) {
+        for (int i = 0; i < total; i++) {
+            if (!pacientes[i].atendido &&
+                pacientes[i].tipo == prioridades[p]) {
+                return i;
+            }
+        }
+    }
+
+    return -1;
+}
+
+// Exibe a proxima senha
+void mostrarPainel() {
+    int posicao = proximoPaciente();
+
+    printf("\n========== PAINEL ==========\n");
+
+    if (posicao == -1)
+        printf("Nenhuma senha aguardando.\n");
+    else
+        printf("PROXIMA SENHA: %s\n", pacientes[posicao].senha);
+
+    printf("============================\n");
+}
+
+// Cadastra paciente e gera senha
+void retirarSenha() {
+    if (total >= MAX) {
+        printf("\nLimite de pacientes atingido!\n");
+        return;
+    }
+
+    Paciente p;
+
+    printf("\n========== RETIRAR SENHA ==========\n");
+
+    printf("Nome: ");
+    scanf(" %99[^\n]", p.nome);
+
+    printf("Idade: ");
+    scanf("%d", &p.idade);
+
+    if (p.idade < 0) {
+        printf("Idade invalida!\n");
+        return;
+    }
+
+    printf("Genero (F/M/O): ");
+    scanf(" %c", &p.genero);
+
+    p.gestante = 'N';
+    p.necessidadeEspecial = 'N';
+
+    if (p.genero == 'F' || p.genero == 'f') {
+        printf("Esta gestante? (S/N): ");
+        scanf(" %c", &p.gestante);
+    }
+
+    printf("Possui necessidade especial? (S/N): ");
+    scanf(" %c", &p.necessidadeEspecial);
+
+    // Define a categoria e gera a senha
+    if (p.idade > 80) {
+        p.tipo = 'U';
+        sprintf(p.senha, "U%03d", ++contadorUrgente);
+    }
+    else if (p.gestante == 'S' || p.gestante == 's' ||
+             p.necessidadeEspecial == 'S' ||
+             p.necessidadeEspecial == 's') {
+        p.tipo = 'P';
+        sprintf(p.senha, "P%03d", ++contadorPreferencial);
+    }
+    else {
+        p.tipo = 'N';
+        sprintf(p.senha, "N%03d", ++contadorNormal);
+    }
+
+    p.atendido = 0;
+    pacientes[total++] = p;
+
+    printf("\n========== SENHA GERADA ==========\n");
+    printf("Paciente: %s\n", p.nome);
+    printf("Senha: %s\n", p.senha);
+
+    if (p.tipo == 'U')
+        printf("Categoria: URGENTE\n");
+    else if (p.tipo == 'P')
+        printf("Categoria: PREFERENCIAL\n");
+    else
+        printf("Categoria: NORMAL\n");
+}
+
+// Registra o atendimento
+void registrarAtendimento() {
+    int posicao = proximoPaciente();
+
+    if (posicao == -1) {
+        printf("\nNao existem pacientes aguardando.\n");
+        return;
+    }
+
+    printf("\n========== ATENDIMENTO ==========\n");
+    printf("Senha: %s\n", pacientes[posicao].senha);
+    printf("Paciente: %s\n", pacientes[posicao].nome);
+    printf("Idade: %d\n", pacientes[posicao].idade);
+
+    pacientes[posicao].atendido = 1;
+
+    printf("\nAtendimento registrado!\n");
+}
+
+// Menu principal
+int main() {
+    int opcao;
+
+    do {
+        mostrarPainel();
+
+        printf("\n========== MENU PRINCIPAL ==========\n");
+        printf("01 - Retirar Senha\n");
+        printf("02 - Registrar Atendimento\n");
+        printf("00 - Sair\n");
+        printf("Escolha uma opcao: ");
+
+        scanf("%d", &opcao);
+
+        switch (opcao) {
+            case 1:
+                retirarSenha();
+                break;
+
+            case 2:
+                registrarAtendimento();
+                break;
+
+            case 0:
+                printf("\nSistema encerrado!\n");
+                break;
+
+            default:
+                printf("\nOpcao invalida!\n");
+        }
+
+    } while (opcao != 0);
+
+    return 0;
+}
